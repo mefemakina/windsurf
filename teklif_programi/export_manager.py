@@ -13,60 +13,107 @@ class ExportManager:
         self.font_name = 'Helvetica'
             
     def export_pdf(self, quotation, file_path):
-        doc = SimpleDocTemplate(file_path, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, 
-                               topMargin=2*cm, bottomMargin=2*cm)
+        doc = SimpleDocTemplate(file_path, pagesize=A4, rightMargin=1.5*cm, leftMargin=1.5*cm, 
+                               topMargin=1.5*cm, bottomMargin=1.5*cm)
         story = []
         styles = getSampleStyleSheet()
         
         # Custom styles
-        title_style = ParagraphStyle(
-            'CustomTitle',
+        company_style = ParagraphStyle(
+            'Company',
             parent=styles['Heading1'],
-            fontSize=18,
-            spaceAfter=30,
-            alignment=1
+            fontSize=16,
+            spaceAfter=5,
+            alignment=0,
+            fontName=self.font_name
+        )
+        
+        title_style = ParagraphStyle(
+            'Title',
+            parent=styles['Heading1'],
+            fontSize=20,
+            spaceAfter=20,
+            alignment=1,
+            fontName=self.font_name
         )
         
         header_style = ParagraphStyle(
-            'CustomHeader',
-            parent=styles['Heading2'],
-            fontSize=12,
-            spaceAfter=10
+            'Header',
+            parent=styles['Normal'],
+            fontSize=9,
+            spaceAfter=2,
+            fontName=self.font_name
         )
         
-        normal_style = ParagraphStyle(
-            'CustomNormal',
+        label_style = ParagraphStyle(
+            'Label',
             parent=styles['Normal'],
             fontSize=10,
-            spaceAfter=5
+            fontName=self.font_name,
+            alignment=0
         )
         
-        # Title
-        story.append(Paragraph("TEKLİF", title_style))
-        story.append(Spacer(1, 0.5*cm))
+        value_style = ParagraphStyle(
+            'Value',
+            parent=styles['Normal'],
+            fontSize=10,
+            fontName=self.font_name,
+            alignment=0
+        )
         
-        # Header information
-        header_data = [
-            ['Teklif No:', quotation['quotation_no']],
-            ['Tarih:', quotation['date']],
-            ['Teslimat Tipi:', quotation['delivery_type']],
-            ['Para Birimi:', quotation['currency']]
+        # Header section - Company info on left, Title on right
+        header_layout = [
+            [
+                Paragraph("MEFE MAKİNA", company_style),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1)),
+                Paragraph("TEKLİF", title_style)
+            ],
+            [
+                Paragraph("Organize Sanayi Bölgesi", header_style),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1)),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1))
+            ],
+            [
+                Paragraph("Tel: +90 XXX XXX XX XX", header_style),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1)),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1))
+            ],
+            [
+                Paragraph("E-mail: info@mefemakina.com", header_style),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1)),
+                Paragraph("", ParagraphStyle('Empty', fontSize=1))
+            ]
         ]
         
-        header_table = Table(header_data, colWidths=[4*cm, 6*cm])
+        header_table = Table(header_layout, colWidths=[7*cm, 1*cm, 7*cm])
         header_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), self.font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         story.append(header_table)
-        story.append(Spacer(1, 1*cm))
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Quotation info section
+        info_data = [
+            [Paragraph("Teklif No:", label_style), Paragraph(quotation['quotation_no'], value_style)],
+            [Paragraph("Tarih:", label_style), Paragraph(quotation['date'], value_style)],
+            [Paragraph("Firma:", label_style), Paragraph("CORLU COCA COLA", value_style)],
+            [Paragraph("Teslimat:", label_style), Paragraph(quotation['delivery_type'], value_style)]
+        ]
+        
+        info_table = Table(info_data, colWidths=[3*cm, 12*cm])
+        info_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        story.append(info_table)
+        story.append(Spacer(1, 0.5*cm))
         
         # Items table
         if quotation['items']:
-            items_data = [['Sıra', 'Kod', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam']]
+            items_data = [['Sıra', 'Kod', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'Tutar']]
             
             for idx, item in enumerate(quotation['items'], 1):
                 items_data.append([
@@ -79,45 +126,61 @@ class ExportManager:
                     f"{float(item['total']):.2f}"
                 ])
             
-            items_table = Table(items_data, colWidths=[1*cm, 2*cm, 5*cm, 2*cm, 2*cm, 2*cm, 2*cm])
+            items_table = Table(items_data, colWidths=[0.8*cm, 2.5*cm, 6*cm, 1.5*cm, 1.5*cm, 2.5*cm, 2.5*cm])
             items_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, -1), self.font_name),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.whitesmoke]),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ]))
             story.append(items_table)
-            story.append(Spacer(1, 1*cm))
+            story.append(Spacer(1, 0.5*cm))
         
-        # Total
+        # Total row
         total_data = [
-            ['', '', '', '', '', 'Toplam:', f"{float(quotation['total_amount']):.2f} {quotation['currency']}"]
+            ['', '', '', '', '', Paragraph('Toplam:', label_style), Paragraph(f"{float(quotation['total_amount']):.2f} {quotation['currency']}", value_style)]
         ]
-        total_table = Table(total_data, colWidths=[1*cm, 2*cm, 5*cm, 2*cm, 2*cm, 2*cm, 2*cm])
+        total_table = Table(total_data, colWidths=[0.8*cm, 2.5*cm, 6*cm, 1.5*cm, 1.5*cm, 2.5*cm, 2.5*cm])
         total_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), self.font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 11),
-            ('FONTNAME', (5, 0), (6, 0), self.font_name),
-            ('FONTSIZE', (5, 0), (6, 0), 11),
-            ('ALIGN', (5, 0), (6, 0), 'RIGHT'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (5, 0), (5, 0), 'RIGHT'),
+            ('ALIGN', (6, 0), (6, 0), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
         story.append(total_table)
-        story.append(Spacer(1, 1*cm))
+        story.append(Spacer(1, 0.5*cm))
         
         # Notes
         if quotation['notes']:
-            story.append(Paragraph("Notlar:", header_style))
-            story.append(Paragraph(quotation['notes'], normal_style))
+            story.append(Paragraph("Notlar:", label_style))
+            story.append(Paragraph(quotation['notes'], header_style))
+            story.append(Spacer(1, 0.5*cm))
         
-        # Footer
-        story.append(Spacer(1, 2*cm))
-        footer_text = f"Bu teklif {datetime.now().strftime('%d.%m.%Y')} tarihinde düzenlenmiştir."
-        story.append(Paragraph(footer_text, normal_style))
+        # Signature section
+        signature_data = [
+            [Paragraph("Kabul Eden:", label_style), Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("Teklif Veren:", label_style)],
+            [Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("", ParagraphStyle('Empty', fontSize=1))],
+            [Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("", ParagraphStyle('Empty', fontSize=1))],
+            [Paragraph("İmza:", label_style), Paragraph("", ParagraphStyle('Empty', fontSize=1)), Paragraph("İmza:", label_style)]
+        ]
+        
+        signature_table = Table(signature_data, colWidths=[7*cm, 1*cm, 7*cm])
+        signature_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), self.font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ROWHEIGHT', (1, 0), (1, -1), 2*cm),
+        ]))
+        story.append(signature_table)
         
         # Build PDF
         doc.build(story)

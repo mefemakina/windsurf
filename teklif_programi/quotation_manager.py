@@ -1,10 +1,12 @@
 import sqlite3
 import json
+import os
 from datetime import datetime
 
 class QuotationManager:
-    def __init__(self):
-        self.conn = sqlite3.connect('teklif.db')
+    def __init__(self, db_path):
+        db_file = os.path.join(db_path, 'teklif.db')
+        self.conn = sqlite3.connect(db_file)
         self.create_tables()
         
     def create_tables(self):

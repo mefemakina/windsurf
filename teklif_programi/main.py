@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 from datetime import datetime
 import sqlite3
 import os
+import sys
 from quotation_manager import QuotationManager
 from company_manager import CompanyManager
 from export_manager import ExportManager
@@ -13,9 +14,15 @@ class TeklifProgrami:
         self.root.title("MEFE Makina - Teklif Programı")
         self.root.geometry("1200x800")
         
+        # Set database path to executable directory
+        if getattr(sys, 'frozen', False):
+            self.db_path = os.path.dirname(sys.executable)
+        else:
+            self.db_path = os.path.dirname(os.path.abspath(__file__))
+        
         # Initialize managers
-        self.quotation_manager = QuotationManager()
-        self.company_manager = CompanyManager()
+        self.quotation_manager = QuotationManager(self.db_path)
+        self.company_manager = CompanyManager(self.db_path)
         self.export_manager = ExportManager()
         
         # Create main interface
@@ -374,8 +381,36 @@ class TeklifProgrami:
         
     def export_pdf(self):
         quotation_no = self.quotation_no_var.get()
-        if not quotation_no:
-            messagebox.showerror("Hata", "Önce teklif kaydediniz.")
+        company_name = self.company_var.get()
+        delivery_type = self.delivery_type_var.get()
+        currency = self.currency_var.get()
+        notes = self.notes_text.get("1.0", tk.END).strip()
+        
+        if not company_name:
+            messagebox.showerror("Hata", "Firma seçiniz.")
+            return
+            
+        if not delivery_type:
+            messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
+            return
+            
+        # Get items from form
+        items = []
+        total_amount = 0
+        for item in self.items_tree.get_children():
+            values = self.items_tree.item(item)['values']
+            items.append({
+                'code': values[1],
+                'description': values[2],
+                'quantity': values[3],
+                'unit': values[4],
+                'unit_price': values[5],
+                'total': values[6]
+            })
+            total_amount += values[6]
+            
+        if not items:
+            messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
             return
             
         file_path = filedialog.asksaveasfilename(
@@ -385,15 +420,56 @@ class TeklifProgrami:
         )
         
         if file_path:
-            quotation = self.quotation_manager.get_quotation_by_no(quotation_no)
-            if quotation:
+            quotation = {
+                'quotation_no': quotation_no,
+                'date': self.date_var.get(),
+                'company_id': None,
+                'delivery_type': delivery_type,
+                'currency': currency,
+                'total_amount': total_amount,
+                'notes': notes,
+                'items': items
+            }
+            try:
                 self.export_manager.export_pdf(quotation, file_path)
                 messagebox.showinfo("Başarılı", "PDF başarıyla dışa aktarıldı.")
+                # Auto-open PDF
+                os.startfile(file_path)
+            except Exception as e:
+                messagebox.showerror("Hata", f"PDF oluşturulurken hata: {str(e)}")
                 
     def export_excel(self):
         quotation_no = self.quotation_no_var.get()
-        if not quotation_no:
-            messagebox.showerror("Hata", "Önce teklif kaydediniz.")
+        company_name = self.company_var.get()
+        delivery_type = self.delivery_type_var.get()
+        currency = self.currency_var.get()
+        notes = self.notes_text.get("1.0", tk.END).strip()
+        
+        if not company_name:
+            messagebox.showerror("Hata", "Firma seçiniz.")
+            return
+            
+        if not delivery_type:
+            messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
+            return
+            
+        # Get items from form
+        items = []
+        total_amount = 0
+        for item in self.items_tree.get_children():
+            values = self.items_tree.item(item)['values']
+            items.append({
+                'code': values[1],
+                'description': values[2],
+                'quantity': values[3],
+                'unit': values[4],
+                'unit_price': values[5],
+                'total': values[6]
+            })
+            total_amount += values[6]
+            
+        if not items:
+            messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
             return
             
         file_path = filedialog.asksaveasfilename(
@@ -403,10 +479,23 @@ class TeklifProgrami:
         )
         
         if file_path:
-            quotation = self.quotation_manager.get_quotation_by_no(quotation_no)
-            if quotation:
+            quotation = {
+                'quotation_no': quotation_no,
+                'date': self.date_var.get(),
+                'company_id': None,
+                'delivery_type': delivery_type,
+                'currency': currency,
+                'total_amount': total_amount,
+                'notes': notes,
+                'items': items
+            }
+            try:
                 self.export_manager.export_excel(quotation, file_path)
                 messagebox.showinfo("Başarılı", "Excel başarıyla dışa aktarıldı.")
+                # Auto-open Excel
+                os.startfile(file_path)
+            except Exception as e:
+                messagebox.showerror("Hata", f"Excel oluşturulurken hata: {str(e)}")
                 
     def view_quotation(self):
         selected = self.history_tree.selection()

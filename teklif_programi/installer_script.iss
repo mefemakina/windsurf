@@ -1,14 +1,15 @@
 [Setup]
 AppName=MEFE Makina Teklif Programı
-AppVersion=1.0
-DefaultDirName={pf}\MEFE Makina\Teklif Programı
+AppVersion=1.4
+DefaultDirName={commonpf}\MEFE Makina\Teklif Programı
 DefaultGroupName=MEFE Makina
-OutputBaseFilename=TeklifProgramiSetup
+OutputBaseFilename=TeklifProgramiSetup-v1.4
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-LicenseFile=
 UninstallDisplayIcon={app}\TeklifProgrami.exe
+CreateAppDir=yes
+OutputDir=.
 
 [Files]
 Source: "dist\TeklifProgrami.exe"; DestDir: "{app}"; Flags: ignoreversion

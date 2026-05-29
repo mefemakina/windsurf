@@ -353,7 +353,7 @@ class TeklifProgrami:
                     'unit_price': values[5],
                     'total': values[6]
                 })
-                total_amount += values[6]
+                total_amount += float(values[6])
                 
             if not items:
                 messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
@@ -413,7 +413,7 @@ class TeklifProgrami:
                     'unit_price': values[5],
                     'total': values[6]
                 })
-                total_amount += values[6]
+                total_amount += float(values[6])
                 
             if not items:
                 messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
@@ -472,7 +472,7 @@ class TeklifProgrami:
                 'unit_price': values[5],
                 'total': values[6]
             })
-            total_amount += values[6]
+            total_amount += float(values[6])
             
         if not items:
             messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")

@@ -437,6 +437,7 @@ class TeklifProgrami:
                     'quotation_no': quotation_no,
                     'date': self.date_var.get(),
                     'company_id': None,
+                    'company_name': company_name,
                     'delivery_type': delivery_type,
                     'currency': currency,
                     'total_amount': total_amount,

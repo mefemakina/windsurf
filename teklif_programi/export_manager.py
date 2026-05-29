@@ -94,10 +94,11 @@ class ExportManager:
         story.append(Spacer(1, 0.5*cm))
         
         # Quotation info section
+        company_name = quotation.get('company_name', '')
         info_data = [
             [Paragraph("Teklif No:", label_style), Paragraph(quotation['quotation_no'], value_style)],
             [Paragraph("Tarih:", label_style), Paragraph(quotation['date'], value_style)],
-            [Paragraph("Firma:", label_style), Paragraph("CORLU COCA COLA", value_style)],
+            [Paragraph("Firma:", label_style), Paragraph(company_name, value_style)],
             [Paragraph("Teslimat:", label_style), Paragraph(quotation['delivery_type'], value_style)]
         ]
         

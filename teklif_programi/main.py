@@ -15,11 +15,18 @@ class TeklifProgrami:
         self.root.title("MEFE Makina - Teklif Programı")
         self.root.geometry("1200x800")
         
-        # Set database path to executable directory
+        # Set database path to user-writable location (AppData)
         if getattr(sys, 'frozen', False):
-            self.db_path = os.path.dirname(sys.executable)
+            # Running as executable
+            app_data = os.path.expandvars('%APPDATA%')
+            self.db_path = os.path.join(app_data, 'MEFE_Makina_Teklif')
         else:
+            # Running as script
             self.db_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # Create database directory if it doesn't exist
+        if not os.path.exists(self.db_path):
+            os.makedirs(self.db_path)
         
         # Initialize managers
         self.quotation_manager = QuotationManager(self.db_path)

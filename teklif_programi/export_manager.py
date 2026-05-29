@@ -3,24 +3,14 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from datetime import datetime
 
 class ExportManager:
     def __init__(self):
-        self.setup_fonts()
-        
-    def setup_fonts(self):
-        try:
-            # Try to register a font that supports Turkish characters
-            pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf'))
-            self.font_name = 'Arial'
-        except:
-            # Fallback to default font
-            self.font_name = 'Helvetica'
+        # Use default Helvetica font (supports basic characters)
+        self.font_name = 'Helvetica'
             
     def export_pdf(self, quotation, file_path):
         doc = SimpleDocTemplate(file_path, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, 

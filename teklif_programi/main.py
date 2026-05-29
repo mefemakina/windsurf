@@ -4,6 +4,7 @@ from datetime import datetime
 import sqlite3
 import os
 import sys
+import traceback
 from quotation_manager import QuotationManager
 from company_manager import CompanyManager
 from export_manager import ExportManager
@@ -323,52 +324,56 @@ class TeklifProgrami:
                 self.load_companies_to_tree()
                 
     def save_quotation(self):
-        quotation_no = self.quotation_no_var.get()
-        date = self.date_var.get()
-        company_name = self.company_var.get()
-        delivery_type = self.delivery_type_var.get()
-        currency = self.currency_var.get()
-        notes = self.notes_text.get("1.0", tk.END).strip()
-        
-        if not company_name:
-            messagebox.showerror("Hata", "Firma seçiniz.")
-            return
+        try:
+            quotation_no = self.quotation_no_var.get()
+            date = self.date_var.get()
+            company_name = self.company_var.get()
+            delivery_type = self.delivery_type_var.get()
+            currency = self.currency_var.get()
+            notes = self.notes_text.get("1.0", tk.END).strip()
             
-        if not delivery_type:
-            messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
-            return
+            if not company_name:
+                messagebox.showerror("Hata", "Firma seçiniz.")
+                return
+                
+            if not delivery_type:
+                messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
+                return
+                
+            # Get items
+            items = []
+            total_amount = 0
+            for item in self.items_tree.get_children():
+                values = self.items_tree.item(item)['values']
+                items.append({
+                    'code': values[1],
+                    'description': values[2],
+                    'quantity': values[3],
+                    'unit': values[4],
+                    'unit_price': values[5],
+                    'total': values[6]
+                })
+                total_amount += values[6]
+                
+            if not items:
+                messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
+                return
+                
+            # Get company ID
+            company_id = self.company_manager.get_company_id_by_name(company_name)
             
-        # Get items
-        items = []
-        total_amount = 0
-        for item in self.items_tree.get_children():
-            values = self.items_tree.item(item)['values']
-            items.append({
-                'code': values[1],
-                'description': values[2],
-                'quantity': values[3],
-                'unit': values[4],
-                'unit_price': values[5],
-                'total': values[6]
-            })
-            total_amount += values[6]
+            # Save quotation
+            self.quotation_manager.add_quotation(
+                quotation_no, date, company_id, delivery_type, 
+                currency, total_amount, notes, items
+            )
             
-        if not items:
-            messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
-            return
-            
-        # Get company ID
-        company_id = self.company_manager.get_company_id_by_name(company_name)
-        
-        # Save quotation
-        self.quotation_manager.add_quotation(
-            quotation_no, date, company_id, delivery_type, 
-            currency, total_amount, notes, items
-        )
-        
-        messagebox.showinfo("Başarılı", "Teklif başarıyla kaydedildi.")
-        self.load_history()
-        self.clear_form()
+            messagebox.showinfo("Başarılı", "Teklif başarıyla kaydedildi.")
+            self.load_history()
+            self.clear_form()
+        except Exception as e:
+            error_msg = f"Teklif kaydetme hatası:\n{str(e)}\n\nDetaylar:\n{traceback.format_exc()}"
+            messagebox.showerror("Hata", error_msg)
         
     def clear_form(self):
         self.generate_quotation_no()
@@ -380,63 +385,64 @@ class TeklifProgrami:
         self.notes_text.delete("1.0", tk.END)
         
     def export_pdf(self):
-        quotation_no = self.quotation_no_var.get()
-        company_name = self.company_var.get()
-        delivery_type = self.delivery_type_var.get()
-        currency = self.currency_var.get()
-        notes = self.notes_text.get("1.0", tk.END).strip()
-        
-        if not company_name:
-            messagebox.showerror("Hata", "Firma seçiniz.")
-            return
+        try:
+            quotation_no = self.quotation_no_var.get()
+            company_name = self.company_var.get()
+            delivery_type = self.delivery_type_var.get()
+            currency = self.currency_var.get()
+            notes = self.notes_text.get("1.0", tk.END).strip()
             
-        if not delivery_type:
-            messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
-            return
+            if not company_name:
+                messagebox.showerror("Hata", "Firma seçiniz.")
+                return
+                
+            if not delivery_type:
+                messagebox.showerror("Hata", "Teslimat tipi seçiniz.")
+                return
+                
+            # Get items from form
+            items = []
+            total_amount = 0
+            for item in self.items_tree.get_children():
+                values = self.items_tree.item(item)['values']
+                items.append({
+                    'code': values[1],
+                    'description': values[2],
+                    'quantity': values[3],
+                    'unit': values[4],
+                    'unit_price': values[5],
+                    'total': values[6]
+                })
+                total_amount += values[6]
+                
+            if not items:
+                messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
+                return
+                
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF files", "*.pdf")],
+                initialfile=f"{quotation_no}.pdf"
+            )
             
-        # Get items from form
-        items = []
-        total_amount = 0
-        for item in self.items_tree.get_children():
-            values = self.items_tree.item(item)['values']
-            items.append({
-                'code': values[1],
-                'description': values[2],
-                'quantity': values[3],
-                'unit': values[4],
-                'unit_price': values[5],
-                'total': values[6]
-            })
-            total_amount += values[6]
-            
-        if not items:
-            messagebox.showerror("Hata", "En az bir kalem ekleyiniz.")
-            return
-            
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".pdf",
-            filetypes=[("PDF files", "*.pdf")],
-            initialfile=f"{quotation_no}.pdf"
-        )
-        
-        if file_path:
-            quotation = {
-                'quotation_no': quotation_no,
-                'date': self.date_var.get(),
-                'company_id': None,
-                'delivery_type': delivery_type,
-                'currency': currency,
-                'total_amount': total_amount,
-                'notes': notes,
-                'items': items
-            }
-            try:
+            if file_path:
+                quotation = {
+                    'quotation_no': quotation_no,
+                    'date': self.date_var.get(),
+                    'company_id': None,
+                    'delivery_type': delivery_type,
+                    'currency': currency,
+                    'total_amount': total_amount,
+                    'notes': notes,
+                    'items': items
+                }
                 self.export_manager.export_pdf(quotation, file_path)
                 messagebox.showinfo("Başarılı", "PDF başarıyla dışa aktarıldı.")
                 # Auto-open PDF
                 os.startfile(file_path)
-            except Exception as e:
-                messagebox.showerror("Hata", f"PDF oluşturulurken hata: {str(e)}")
+        except Exception as e:
+            error_msg = f"PDF dışa aktarma hatası:\n{str(e)}\n\nDetaylar:\n{traceback.format_exc()}"
+            messagebox.showerror("Hata", error_msg)
                 
     def export_excel(self):
         quotation_no = self.quotation_no_var.get()

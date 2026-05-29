@@ -75,8 +75,8 @@ class ExportManager:
                     item['description'],
                     str(item['quantity']),
                     item['unit'],
-                    f"{item['unit_price']:.2f}",
-                    f"{item['total']:.2f}"
+                    f"{float(item['unit_price']):.2f}",
+                    f"{float(item['total']):.2f}"
                 ])
             
             items_table = Table(items_data, colWidths=[1*cm, 2*cm, 5*cm, 2*cm, 2*cm, 2*cm, 2*cm])
@@ -95,7 +95,7 @@ class ExportManager:
         
         # Total
         total_data = [
-            ['', '', '', '', '', 'Toplam:', f"{quotation['total_amount']:.2f} {quotation['currency']}"]
+            ['', '', '', '', '', 'Toplam:', f"{float(quotation['total_amount']):.2f} {quotation['currency']}"]
         ]
         total_table = Table(total_data, colWidths=[1*cm, 2*cm, 5*cm, 2*cm, 2*cm, 2*cm, 2*cm])
         total_table.setStyle(TableStyle([

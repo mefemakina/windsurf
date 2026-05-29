@@ -1,9 +1,9 @@
 [Setup]
 AppName=MEFE Makina Teklif Programı
-AppVersion=1.5
+AppVersion=1.6
 DefaultDirName={commonpf}\MEFE Makina\Teklif Programı
 DefaultGroupName=MEFE Makina
-OutputBaseFilename=TeklifProgramiSetup-v1.5
+OutputBaseFilename=TeklifProgramiSetup-v1.6
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
